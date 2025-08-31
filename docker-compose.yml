@@ -1,0 +1,24 @@
+version: '3.9'
+
+services:
+  db:
+    image: postgres:16
+    container_name: hi-postgres
+    restart: unless-stopped
+    ports:
+      - '${POSTGRES_PORT:-5432}:5432' # ホスト:コンテナ
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-hi}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-hi}
+      POSTGRES_DB: ${POSTGRES_DB:-hi}
+      TZ: 'Asia/Tokyo'
+    volumes:
+      - dbdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-hi} -d ${POSTGRES_DB:-hi}']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  dbdata:
