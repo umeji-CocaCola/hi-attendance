@@ -1,0 +1,27 @@
+// prisma/schema.prisma
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id          String       @id @default(cuid())
+  name        String
+  department  String?
+  role        String?      // 後で enum に
+  attendances Attendance[]
+}
+
+model Attendance {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id])
+  startedAt    DateTime
+  endedAt      DateTime?
+  breakMinutes Int      @default(0)
+  status       String   // 後で enum に
+  @@index([userId])
+}
