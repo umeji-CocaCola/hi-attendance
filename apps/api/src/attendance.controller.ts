@@ -10,4 +10,9 @@ export class AttendanceController {
   async clockIn(@Body() body: ClockInDto) {
     return this.attendanceService.clockIn(body.userId);
   }
+
+  @Post('clock-out')
+  async clockOut(@Body() body: ClockInDto) {
+    return this.attendanceService.clockOut(body.userId);
+  }
 }
