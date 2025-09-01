@@ -48,10 +48,7 @@ export class AttendanceService {
     const end = new Date();
     const updated = await this.prisma.attendance.update({
       where: { id: open.id },
-      data: {
-        endedAt: end,
-        status: 'OFF',
-      },
+      data: { endedAt: end, status: 'OFF' },
       select: {
         id: true,
         userId: true,
@@ -61,12 +58,20 @@ export class AttendanceService {
       },
     });
 
+    // 実働 = (終了 - 開始) - 休憩（分）
+    const totalMinutes = Math.max(
+      0,
+      Math.ceil((updated.endedAt!.getTime() - updated.startedAt.getTime()) / 60_000),
+    );
+    const workedMinutes = Math.max(0, totalMinutes - updated.breakMinutes);
+
     return {
       id: updated.id,
       userId: updated.userId,
       clockInAt: updated.startedAt,
       clockOutAt: updated.endedAt,
       breakMinutes: updated.breakMinutes,
+      workedMinutes, // ★ 追加
       message: `User ${updated.userId} clocked out.`,
     };
   }
