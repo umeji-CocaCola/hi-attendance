@@ -19,6 +19,13 @@ export default function Page() {
   const [breakStartResult, setBreakStartResult] = useState('');
   const [breakEndResult, setBreakEndResult] = useState('');
 
+  // 表示用
+  const [me, setMe] = useState<string>('');
+  const [clockInResult, setClockInResult] = useState('');
+  const [clockOutResult, setClockOutResult] = useState('');
+  const [breakStartResult, setBreakStartResult] = useState('');
+  const [breakEndResult, setBreakEndResult] = useState('');
+
   // JSTフォーマッタ
   const fmtJST = (iso?: string) => {
     if (!iso) return '';
@@ -99,6 +106,11 @@ export default function Page() {
   };
   const breakStart = () => authedFetch('/attendance/break-start', setBreakStartResult);
   const breakEnd = () => authedFetch('/attendance/break-end', setBreakEndResult);
+
+  const logout = () => {
+    localStorage.removeItem('token');
+    router.replace('/login');
+  };
 
   const logout = () => {
     localStorage.removeItem('token');
