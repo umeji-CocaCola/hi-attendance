@@ -12,17 +12,14 @@ export class AttendanceController {
   async clockIn(@Request() req: any) {
     return this.attendanceService.clockIn(req.user.userId);
   }
-
   @Post('clock-out')
   async clockOut(@Request() req: any) {
     return this.attendanceService.clockOut(req.user.userId);
   }
-
   @Post('break-start')
   async breakStart(@Request() req: any) {
     return this.attendanceService.breakStart(req.user.userId);
   }
-
   @Post('break-end')
   async breakEnd(@Request() req: any) {
     return this.attendanceService.breakEnd(req.user.userId);

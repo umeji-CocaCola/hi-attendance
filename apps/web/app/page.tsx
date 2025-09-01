@@ -19,6 +19,14 @@ export default function Page() {
   const [breakStartResult, setBreakStartResult] = useState('');
   const [breakEndResult, setBreakEndResult] = useState('');
 
+  // 表示用
+  const [me, setMe] = useState<string>('');
+  const [clockInResult, setClockInResult] = useState('');
+  const [clockOutResult, setClockOutResult] = useState('');
+  const [breakStartResult, setBreakStartResult] = useState('');
+  const [breakEndResult, setBreakEndResult] = useState('');
+
+  // JSTフォーマッタ
   const fmtJST = (iso?: string) => {
     if (!iso) return '';
     return new Intl.DateTimeFormat('ja-JP', {
@@ -61,7 +69,7 @@ export default function Page() {
       const json = await authed('/attendance/clock-in', { method: 'POST' });
       setClockInResult(JSON.stringify(json));
     } catch (e) {
-      setClockInResult(`error: ${(e as Error).message}`);
+      alert(`ログイン失敗: ${(e as Error).message}`);
     }
   };
 
@@ -82,17 +90,26 @@ export default function Page() {
       const json = await authed('/attendance/break-start', { method: 'POST' });
       setBreakStartResult(JSON.stringify(json));
     } catch (e) {
-      setBreakStartResult(`error: ${(e as Error).message}`);
+      setter(`error: ${(e as Error).message}`);
     }
   };
 
-  const breakEnd = async () => {
+  // 打刻操作
+  const clockIn = () => authedFetch('/attendance/clock-in', setClockInResult);
+  const clockOut = async () => {
     try {
       const json = await authed('/attendance/break-end', { method: 'POST' });
       setBreakEndResult(JSON.stringify(json));
     } catch (e) {
-      setBreakEndResult(`error: ${(e as Error).message}`);
+      setClockOutResult(`error: ${(e as Error).message}`);
     }
+  };
+  const breakStart = () => authedFetch('/attendance/break-start', setBreakStartResult);
+  const breakEnd = () => authedFetch('/attendance/break-end', setBreakEndResult);
+
+  const logout = () => {
+    localStorage.removeItem('token');
+    router.replace('/login');
   };
 
   const logout = () => {
