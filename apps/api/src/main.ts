@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
@@ -5,26 +6,31 @@ import { ValidationPipe } from '@nestjs/common';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // DTO バリデーションを全体に適用
   app.useGlobalPipes(
     new ValidationPipe({
-      whitelist: true, // DTOに無いプロパティを除去
-      forbidNonWhitelisted: true, // 余計なプロパティが来たら400
-      transform: true, // ペイロードをDTO型に変換
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
+      // transformOptions: { enableImplicitConversion: true }, // 必要ならON
     }),
   );
 
-  // CORS（Next.jsローカルを許可）
+  const origins = (process.env.CORS_ORIGIN ?? 'http://localhost:3000')
+    .split(',')
+    .map((s) => s.trim());
+
   app.enableCors({
-    origin: 'http://localhost:3000',
+    origin: origins.length === 1 ? origins[0] : origins,
     credentials: true,
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    optionsSuccessStatus: 204,
   });
 
-  // もしプレフィックスを付けたい場合はコメントを外す（/api/health などに変わる）
   // app.setGlobalPrefix('api');
 
-  const port = process.env.PORT ? Number(process.env.PORT) : 3001;
-  await app.listen(port);
+  const port = Number(process.env.API_PORT ?? 3001);
+  await app.listen(port, '0.0.0.0');
+  console.log(`[api] listening on http://localhost:${port}`);
 }
-
 void bootstrap();

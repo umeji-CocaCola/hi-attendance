@@ -1,28 +1,26 @@
-import { Controller, Post, Body } from '@nestjs/common';
-import { ClockInDto } from './dto/clock-in.dto';
+import { Controller, Post, Body, UseGuards, Request } from '@nestjs/common';
+import { JwtAuthGuard } from './auth/jwt.guard';
 import { AttendanceService } from './attendance.service';
 
+@UseGuards(JwtAuthGuard)
 @Controller('attendance')
 export class AttendanceController {
   constructor(private readonly attendanceService: AttendanceService) {}
 
   @Post('clock-in')
-  async clockIn(@Body() body: ClockInDto) {
-    return this.attendanceService.clockIn(body.userId);
+  async clockIn(@Request() req: any) {
+    return this.attendanceService.clockIn(req.user.userId);
   }
-
   @Post('clock-out')
-  async clockOut(@Body() body: ClockInDto) {
-    return this.attendanceService.clockOut(body.userId);
+  async clockOut(@Request() req: any) {
+    return this.attendanceService.clockOut(req.user.userId);
   }
-
   @Post('break-start')
-  async breakStart(@Body() body: ClockInDto) {
-    return this.attendanceService.breakStart(body.userId);
+  async breakStart(@Request() req: any) {
+    return this.attendanceService.breakStart(req.user.userId);
   }
-
   @Post('break-end')
-  async breakEnd(@Body() body: ClockInDto) {
-    return this.attendanceService.breakEnd(body.userId);
+  async breakEnd(@Request() req: any) {
+    return this.attendanceService.breakEnd(req.user.userId);
   }
 }
