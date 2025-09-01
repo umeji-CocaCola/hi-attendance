@@ -15,4 +15,14 @@ export class AttendanceController {
   async clockOut(@Body() body: ClockInDto) {
     return this.attendanceService.clockOut(body.userId);
   }
+
+  @Post('break-start')
+  async breakStart(@Body() body: ClockInDto) {
+    return this.attendanceService.breakStart(body.userId);
+  }
+
+  @Post('break-end')
+  async breakEnd(@Body() body: ClockInDto) {
+    return this.attendanceService.breakEnd(body.userId);
+  }
 }

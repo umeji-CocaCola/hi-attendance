@@ -1,22 +1,31 @@
-import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  ConflictException,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from './prisma.service';
 
 @Injectable()
 export class AttendanceService {
   constructor(private readonly prisma: PrismaService) {}
 
+  // 出勤打刻
   async clockIn(userId: string) {
     const existing = await this.prisma.attendance.findFirst({
       where: { userId, endedAt: null },
       select: { id: true, startedAt: true },
     });
-    if (existing) throw new ConflictException('Already clocked in without clock-out.');
+    if (existing) {
+      throw new ConflictException('Already clocked in without clock-out.');
+    }
 
     const now = new Date();
     const record = await this.prisma.attendance.create({
       data: { userId, startedAt: now, status: 'WORKING' },
       select: { id: true, userId: true, startedAt: true },
     });
+
     return {
       id: record.id,
       userId: record.userId,
@@ -25,8 +34,8 @@ export class AttendanceService {
     };
   }
 
+  // 退勤打刻
   async clockOut(userId: string) {
-    // 未退勤レコードを検索
     const open = await this.prisma.attendance.findFirst({
       where: { userId, endedAt: null },
       select: { id: true, startedAt: true, breakMinutes: true },
@@ -43,12 +52,14 @@ export class AttendanceService {
         endedAt: end,
         status: 'OFF',
       },
-      select: { id: true, userId: true, startedAt: true, endedAt: true, breakMinutes: true },
+      select: {
+        id: true,
+        userId: true,
+        startedAt: true,
+        endedAt: true,
+        breakMinutes: true,
+      },
     });
-
-    // （任意）ここで労働時間の分計算を付けることも可能
-    // const workedMs = +updated.endedAt! - +updated.startedAt - updated.breakMinutes * 60_000;
-    // const workedMinutes = Math.max(0, Math.floor(workedMs / 60_000));
 
     return {
       id: updated.id,
@@ -56,8 +67,66 @@ export class AttendanceService {
       clockInAt: updated.startedAt,
       clockOutAt: updated.endedAt,
       breakMinutes: updated.breakMinutes,
-      // workedMinutes, // ← 表示したければ返す
       message: `User ${updated.userId} clocked out.`,
+    };
+  }
+
+  // 休憩開始
+  async breakStart(userId: string) {
+    const open = await this.prisma.attendance.findFirst({
+      where: { userId, endedAt: null },
+    });
+    if (!open) {
+      throw new NotFoundException('No active attendance to start break.');
+    }
+    if (open.breakStartedAt) {
+      throw new ConflictException('Already on break.');
+    }
+
+    const updated = await this.prisma.attendance.update({
+      where: { id: open.id },
+      data: { breakStartedAt: new Date(), status: 'BREAK' },
+      select: { id: true, userId: true, breakStartedAt: true },
+    });
+
+    return {
+      id: updated.id,
+      userId: updated.userId,
+      breakStartedAt: updated.breakStartedAt,
+      message: `User ${userId} started break.`,
+    };
+  }
+
+  // 休憩終了
+  async breakEnd(userId: string) {
+    const open = await this.prisma.attendance.findFirst({
+      where: { userId, endedAt: null },
+    });
+    if (!open) {
+      throw new NotFoundException('No active attendance to end break.');
+    }
+    if (!open.breakStartedAt) {
+      throw new BadRequestException('Break not started.');
+    }
+
+    const breakMinutes =
+      open.breakMinutes + Math.floor((Date.now() - +open.breakStartedAt) / 60000);
+
+    const updated = await this.prisma.attendance.update({
+      where: { id: open.id },
+      data: { breakStartedAt: null, breakMinutes, status: 'WORKING' },
+      select: {
+        id: true,
+        userId: true,
+        breakMinutes: true,
+      },
+    });
+
+    return {
+      id: updated.id,
+      userId: updated.userId,
+      breakMinutes: updated.breakMinutes,
+      message: `User ${userId} ended break.`,
     };
   }
 }

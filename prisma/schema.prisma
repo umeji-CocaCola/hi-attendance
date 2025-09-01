@@ -22,6 +22,6 @@ model Attendance {
   startedAt    DateTime
   endedAt      DateTime?
   breakMinutes Int      @default(0)
-  status       String   // 後で enum に
-  @@index([userId])
+  breakStartedAt DateTime?   // ★追加
+  status       String
 }
