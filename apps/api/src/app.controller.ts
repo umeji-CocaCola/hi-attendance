@@ -1,9 +1,12 @@
 import { Controller, Get } from '@nestjs/common';
 
-@Controller('') // 空でルートにぶら下げる
+@Controller()
 export class AppController {
   @Get('health')
   health() {
-    return { ok: true };
+    return {
+      status: 'ok',
+      timestamp: new Date().toISOString(),
+    };
   }
 }

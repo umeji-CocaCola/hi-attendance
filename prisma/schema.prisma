@@ -1,27 +1,39 @@
 // prisma/schema.prisma
-datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-}
+
 generator client {
   provider = "prisma-client-js"
 }
 
-model User {
-  id          String       @id @default(cuid())
-  name        String
-  department  String?
-  role        String?      // 後で enum に
-  attendances Attendance[]
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
+// 役割
+enum Role {
+  USER
+  ADMIN
+}
+
+// ユーザー
+model User {
+  id            String       @id @default(cuid())
+  name          String
+  email         String       @unique
+  passwordHash  String
+  role          Role         @default(USER)
+
+  attendances   Attendance[]
+}
+
+// 勤怠
 model Attendance {
-  id           String   @id @default(cuid())
-  userId       String
-  user         User     @relation(fields: [userId], references: [id])
-  startedAt    DateTime
-  endedAt      DateTime?
-  breakMinutes Int      @default(0)
-  breakStartedAt DateTime?   // ★追加
-  status       String
+  id             String   @id @default(cuid())
+  userId         String
+  user           User     @relation(fields: [userId], references: [id])
+  startedAt      DateTime
+  endedAt        DateTime?
+  breakMinutes   Int      @default(0)
+  breakStartedAt DateTime?
+  status         String
 }
