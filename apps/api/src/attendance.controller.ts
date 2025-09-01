@@ -1,15 +1,18 @@
 import { Controller, Post, Body } from '@nestjs/common';
 import { ClockInDto } from './dto/clock-in.dto';
+import { AttendanceService } from './attendance.service';
 
 @Controller('attendance')
 export class AttendanceController {
+  constructor(private readonly attendanceService: AttendanceService) {}
+
   @Post('clock-in')
-  clockIn(@Body() body: ClockInDto) {
-    const now = new Date().toISOString();
-    return {
-      userId: body.userId,
-      clockInAt: now, // 後でDBに入れる想定
-      message: `User ${body.userId} clocked in.`,
-    };
+  async clockIn(@Body() body: ClockInDto) {
+    return this.attendanceService.clockIn(body.userId);
+  }
+
+  @Post('clock-out')
+  async clockOut(@Body() body: ClockInDto) {
+    return this.attendanceService.clockOut(body.userId);
   }
 }
